@@ -1,22 +1,22 @@
-CREATE OR REPLACE PACKAGE EMAILSENDER
+CREATE OR REPLACE PACKAGE emailsender
 authid current_user
 
   IS
--- Рассылка отчетов по корреспондентам
+-- Р Р°СЃСЃС‹Р»РєР° РѕС‚С‡РµС‚РѕРІ РїРѕ РєРѕСЂСЂРµСЃРїРѕРЅРґРµРЅС‚Р°Рј
 --
 -- Author = sparshukov   
---            16/11/2004  Создание
---            20/07/2006  добавлена возможность использовать вложения
---            19/04/2008  Вложения можно архивировать
---                        Можно передавать списки файлов-вложений
---            24/06/2008  переход на сервер с авторизацией
---                        исправление мелкого база с оформлением партиций письма
---                        отказ от таблиц EMAILBODY      
---            11/04/2012  в функцию SendEmailWithAttach добавил обработку паролей
---            10/05/2012  в функцию push_header добавлена обработка спецификации Reply-to
+--            16/11/2004  РЎРѕР·РґР°РЅРёРµ
+--            20/07/2006  РґРѕР±Р°РІР»РµРЅР° РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІР»РѕР¶РµРЅРёСЏ
+--            19/04/2008  Р’Р»РѕР¶РµРЅРёСЏ РјРѕР¶РЅРѕ Р°СЂС…РёРІРёСЂРѕРІР°С‚СЊ
+--                        РњРѕР¶РЅРѕ РїРµСЂРµРґР°РІР°С‚СЊ СЃРїРёСЃРєРё С„Р°Р№Р»РѕРІ-РІР»РѕР¶РµРЅРёР№
+--            24/06/2008  РїРµСЂРµС…РѕРґ РЅР° СЃРµСЂРІРµСЂ СЃ Р°РІС‚РѕСЂРёР·Р°С†РёРµР№
+--                        РёСЃРїСЂР°РІР»РµРЅРёРµ РјРµР»РєРѕРіРѕ Р±Р°Р·Р° СЃ РѕС„РѕСЂРјР»РµРЅРёРµРј РїР°СЂС‚РёС†РёР№ РїРёСЃСЊРјР°
+--                        РѕС‚РєР°Р· РѕС‚ С‚Р°Р±Р»РёС† EMAILBODY      
+--            11/04/2012  РІ С„СѓРЅРєС†РёСЋ SendEmailWithAttach РґРѕР±Р°РІРёР» РѕР±СЂР°Р±РѕС‚РєСѓ РїР°СЂРѕР»РµР№
+--            10/05/2012  РІ С„СѓРЅРєС†РёСЋ push_header РґРѕР±Р°РІР»РµРЅР° РѕР±СЂР°Р±РѕС‚РєР° СЃРїРµС†РёС„РёРєР°С†РёРё Reply-to
 -- ---------  ----------  ------------------------------------------
-   g_sender    constant varchar2(50)     := '<autoreport@megafon.ru>';
-   g_mailhost  constant VARCHAR2(50)     := 'kvk-smtp.megafon.ru'; -- smtpr.lan.megafonkavkaz.ru -- kvk-smtp.megafon.ru  
+   g_sender    constant varchar2(50)     := '<_РѕС‚РїСЂР°РІРёС‚РµР»СЊ_@megafon.ru>';
+   g_mailhost  constant VARCHAR2(50)     := 'smtpr.lan.megafonkavkaz.ru';
 --   g_mailhost  constant VARCHAR2(50)     := 'proxyr1.lan.megafonkavkaz.ru';
    g_mail_conn          utl_smtp.connection;
    g_message            varchar2(4000)   := NULL;
@@ -29,7 +29,7 @@ procedure SendToPsv    (p_subject IN varchar2,p_body in varchar2);
 function  getMsisdnByEmail(p_recip in varchar2) return varchar2;
 
 --------------------------------------------------------------------------------
--- способ: отправляется письмом два CLOB один - тело и один вложение
+-- СЃРїРѕСЃРѕР±: РѕС‚РїСЂР°РІР»СЏРµС‚СЃСЏ РїРёСЃСЊРјРѕРј РґРІР° CLOB РѕРґРёРЅ - С‚РµР»Рѕ Рё РѕРґРёРЅ РІР»РѕР¶РµРЅРёРµ
 FUNCTION SendEmailWithAttach(
    p_recipient   IN TStringList,
    p_subject     IN varchar2,
@@ -55,7 +55,7 @@ FUNCTION SendEmailWithAttach(
  RETURN number;
 
 --------------------------------------------------------------------------------
--- 4й способ: отправляется письмом список вложений с возможностью архивации
+-- 4Р№ СЃРїРѕСЃРѕР±: РѕС‚РїСЂР°РІР»СЏРµС‚СЃСЏ РїРёСЃСЊРјРѕРј СЃРїРёСЃРѕРє РІР»РѕР¶РµРЅРёР№ СЃ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊСЋ Р°СЂС…РёРІР°С†РёРё
 FUNCTION SendEmailWithAttach(
    recpList         IN  TStringList,
    p_subject        IN  varchar2,
@@ -88,15 +88,19 @@ FUNCTION SendEmailWithAttach(
 
 END; -- Package spec
 /
-CREATE OR REPLACE PACKAGE BODY EMAILSENDER
+
+
+
+CREATE OR REPLACE 
+PACKAGE BODY emailsender
 IS
 
   badEmail exception;
   PRAGMA EXCEPTION_INIT(badEmail, -20222);
   l_debug number := 1;
   
-  gv_subject    varchar2(500); -- subj отправляемого письма
-  gv_maxSize    number := 50000000; -- максимальный размер вложения
+  gv_subject    varchar2(500); -- subj РѕС‚РїСЂР°РІР»СЏРµРјРѕРіРѕ РїРёСЃСЊРјР°
+  gv_maxSize    number := 50000000; -- РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ РІР»РѕР¶РµРЅРёСЏ
   gv_alarm      number := 0;
   gv_catchSize  number := 0;
   gv_catchName  varchar2(150):='';
@@ -163,7 +167,7 @@ BEGIN
   end if;  
 END;
 -------------------------------------------------------------------
--- пишем заголовок письма
+-- РїРёС€РµРј Р·Р°РіРѕР»РѕРІРѕРє РїРёСЃСЊРјР°
 procedure Push_Header(recpList IN TStringList,   p_subject IN varchar2)
 is
   l_recpStr  varchar2(2000):='';
@@ -187,7 +191,7 @@ begin
      utl_smtp.rcpt(g_mail_conn, l_recpStr);
    end if;
    utl_smtp.open_data(g_mail_conn);
-   debugmsg('письмо для '||l_recpStr);
+   debugmsg('РїРёСЃСЊРјРѕ РґР»СЏ '||l_recpStr);
    put_header('MIME-Version','1.0');
    put_header('From',    g_sender );
    put_header('To',      l_recpStr);
@@ -199,7 +203,7 @@ begin
      put_header('Return-Path', sys_context('jm_ctx', 'Reply-To'));
    end if;
 
--- 2012/05/15 : вытаскиваем из контекста дополнительную информацию
+-- 2012/05/15 : РІС‹С‚Р°СЃРєРёРІР°РµРј РёР· РєРѕРЅС‚РµРєСЃС‚Р° РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ
    if sys_context('jm_ctx', 'job_id') is not null then
      put_header('X-JM-jobid',     sys_context('jm_ctx', 'job_id'));
      put_header('X-JM-object',    sys_context('jm_ctx', 'object'));
@@ -216,7 +220,7 @@ begin
 end;
 
 -------------------------------------------------------------------
--- пишем тело письма
+-- РїРёС€РµРј С‚РµР»Рѕ РїРёСЃСЊРјР°
 procedure Push_Body(p_body in clob)
 is
 begin
@@ -228,21 +232,16 @@ begin
    put_data(to_char(p_body));   
    put_data('');
    put_data('--P.S.-----------------------------------------------------------------------------');
-   put_data('Это письмо сгенерировано почтовым роботом.');
-   put_data('Отправлено с сервера '||sys_context('USERENV','DB_NAME')||' ('||sys_context('USERENV','DB_UNIQUE_NAME')||')');
+   put_data('Р­С‚Рѕ РїРёСЃСЊРјРѕ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРѕ РїРѕС‡С‚РѕРІС‹Рј СЂРѕР±РѕС‚РѕРј.');
+   put_data('РћС‚РїСЂР°РІР»РµРЅРѕ СЃ СЃРµСЂРІРµСЂР° '||sys_context('USERENV','DB_NAME')||' ('||sys_context('USERENV','DB_UNIQUE_NAME')||')');
 --   if sys_context('jm_ctx','footer1')<>'' then 
    put_data('');
    put_data(sys_context('jm_ctx','footer1'));
-   put_data(sys_context('jm_ctx','footer2'));
-   put_data(sys_context('jm_ctx','footer3'));
-   put_data(sys_context('jm_ctx','footer4'));
-   put_data(sys_context('jm_ctx','footer5'));
-   put_data(sys_context('jm_ctx','footer6'));
 --   end if;
 end;
 
 -------------------------------------------------------------------
--- добавляем аттач в письмо
+-- РґРѕР±Р°РІР»СЏРµРј Р°С‚С‚Р°С‡ РІ РїРёСЃСЊРјРѕ
 procedure Push_attach(p_attach in clob, p_attach_name in varchar2, p_description in varchar2 default null)
 is
    charBuffer    varchar2(2001);
@@ -252,15 +251,15 @@ is
    l_attach_name varchar2(150) := nvl(p_attach_name,'noname.txt');
    
 begin
--- проверяем текстовые вложения
+-- РїСЂРѕРІРµСЂСЏРµРј С‚РµРєСЃС‚РѕРІС‹Рµ РІР»РѕР¶РµРЅРёСЏ
    if dbms_lob.getLength(p_attach)>0  then
        if dbms_lob.getLength(p_attach) > gv_maxSize then 
          gv_alarm := gv_alarm + 1;
          gv_catchName := p_attach_name;
        end if;
-       debugmsg('Есть текстовые вложения : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
+       debugmsg('Р•СЃС‚СЊ С‚РµРєСЃС‚РѕРІС‹Рµ РІР»РѕР¶РµРЅРёСЏ : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
        
-       -- записываем MIME заголовок для передоваемого файла
+       -- Р·Р°РїРёСЃС‹РІР°РµРј MIME Р·Р°РіРѕР»РѕРІРѕРє РґР»СЏ РїРµСЂРµРґРѕРІР°РµРјРѕРіРѕ С„Р°Р№Р»Р°
        put_data(utl_tcp.crlf||'--' || g_mailBoundary);
        put_header('Content-Type','text/plain; charset="windows-1251"; name="'||l_attach_name ||'"');
        put_header('Content-Language','ru');
@@ -271,7 +270,7 @@ begin
        end if;
        put_data('');--utl_tcp.crlf);
 
-       -- записываем сам файл
+       -- Р·Р°РїРёСЃС‹РІР°РµРј СЃР°Рј С„Р°Р№Р»
        readAmount := 2000;    wasRead    := 0;     readPos    := 1;
        begin
          loop
@@ -287,7 +286,7 @@ begin
 end;
 
 -------------------------------------------------------------------
--- добавляем аттач в письмо
+-- РґРѕР±Р°РІР»СЏРµРј Р°С‚С‚Р°С‡ РІ РїРёСЃСЊРјРѕ
 procedure Push_attach(p_attach in blob, p_attach_name in varchar2, p_description in varchar2 default null)
 is
    charBuffer    raw(2400);
@@ -298,12 +297,12 @@ is
    rawBuffer     raw(8000);
    loopcounter   number;
 begin
--- проверяем бинарные вложения
+-- РїСЂРѕРІРµСЂСЏРµРј Р±РёРЅР°СЂРЅС‹Рµ РІР»РѕР¶РµРЅРёСЏ
    if dbms_lob.getLength(p_attach)>0  then
        if p_description like '%with pass%' then
-         debugmsg('Есть бинарные вложения с паролем : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
+         debugmsg('Р•СЃС‚СЊ Р±РёРЅР°СЂРЅС‹Рµ РІР»РѕР¶РµРЅРёСЏ СЃ РїР°СЂРѕР»РµРј : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
        else
-         debugmsg('Есть бинарные вложения : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
+         debugmsg('Р•СЃС‚СЊ Р±РёРЅР°СЂРЅС‹Рµ РІР»РѕР¶РµРЅРёСЏ : '||l_attach_name||'('||to_char(dbms_lob.getLength(p_attach))||')');
        end if;
        if dbms_lob.getLength(p_attach) > gv_maxSize then 
          gv_alarm := gv_alarm + 1;
@@ -311,7 +310,7 @@ begin
        end if;
        
        if upper(l_attach_name)='ZIP' then l_attach_name := 'noname.zip'; end if;
-       -- записываем MIME заголовок для передоваемого файла
+       -- Р·Р°РїРёСЃС‹РІР°РµРј MIME Р·Р°РіРѕР»РѕРІРѕРє РґР»СЏ РїРµСЂРµРґРѕРІР°РµРјРѕРіРѕ С„Р°Р№Р»Р°
 --       put_data('');
        put_data(utl_tcp.crlf||'--' || g_mailBoundary);
        put_header('Content-Type','application/octet-stream; name="'||l_attach_name ||'"');
@@ -322,7 +321,7 @@ begin
        end if;
        put_data('');
 
-       -- записываем сам файл
+       -- Р·Р°РїРёСЃС‹РІР°РµРј СЃР°Рј С„Р°Р№Р»
        readAmount := 2400;    wasRead    := 0;     readPos    := 1;
        begin
          loop
@@ -345,7 +344,7 @@ procedure SendToPsv(p_subject IN varchar2, p_body in varchar2)
 is
   res number;
 begin
-  SendTo('<Sergey.parshukov@megafon.ru>', p_subject, p_body);
+  SendTo('<Sergey.parshukov@megafonkavkaz.ru>', p_subject, p_body);
 end;
 
 
@@ -357,15 +356,15 @@ begin
   if p_size>gv_maxSize then 
     l_recipient := coalesce(sys_context('jm_ctx', 'Reply-To'), GetEmail(user));
     SendTo(l_recipient, 
-         'ВНИМАНИЕ : превышение порога '||case when sys_context('jm_ctx', 'job_id') is not null then 'job_id='||sys_context('jm_ctx', 'job_id') else '' end,
-         'Внимание!'||chr(13)||chr(10)||
-         'Для отчета job_id='||sys_context('jm_ctx', 'job_id')||chr(13)||chr(10)||
-         'с темой='||gv_subject||chr(13)||chr(10)||
+         'Р’РќРРњРђРќРР• : РїСЂРµРІС‹С€РµРЅРёРµ РїРѕСЂРѕРіР° '||case when sys_context('jm_ctx', 'job_id') is not null then 'job_id='||sys_context('jm_ctx', 'job_id') else '' end,
+         'Р’РЅРёРјР°РЅРёРµ!'||chr(13)||chr(10)||
+         'Р”Р»СЏ РѕС‚С‡РµС‚Р° job_id='||sys_context('jm_ctx', 'job_id')||chr(13)||chr(10)||
+         'СЃ С‚РµРјРѕР№='||gv_subject||chr(13)||chr(10)||
          '('||sys_context('jm_ctx', 'object')||
               case when sys_context('jm_ctx', 'object') is not null then '.' else '' end||
               sys_context('jm_ctx', 'procedure')||')'||chr(13)||chr(10)||
-         'превышен максимальный размер вложения "'||p_name||'" ('||p_size||' байт). Наблюдаемый порог - '||to_char(gv_maxSize)||chr(13)||chr(10)||
-         'всего превышаюших вложений - '||to_char(gv_alarm)
+         'РїСЂРµРІС‹С€РµРЅ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ РІР»РѕР¶РµРЅРёСЏ "'||p_name||'" ('||p_size||' Р±Р°Р№С‚). РќР°Р±Р»СЋРґР°РµРјС‹Р№ РїРѕСЂРѕРі - '||to_char(gv_maxSize)||chr(13)||chr(10)||
+         'РІСЃРµРіРѕ РїСЂРµРІС‹С€Р°СЋС€РёС… РІР»РѕР¶РµРЅРёР№ - '||to_char(gv_alarm)
          );
   end if;
 exception
@@ -386,9 +385,9 @@ begin
    utl_smtp.helo(g_mail_conn, g_mailhost);
    utl_smtp.mail(g_mail_conn, g_sender);
    
-   -- заголовок
+   -- Р·Р°РіРѕР»РѕРІРѕРє
    Push_Header(TStringList(p_recipient), p_subject );
-   -- пишем тело письма
+   -- РїРёС€РµРј С‚РµР»Рѕ РїРёСЃСЊРјР°
    Push_Body(to_clob(p_body));
 
    put_data(UTL_TCP.CRLF||'--' || g_mailBoundary||'--'||UTL_TCP.CRLF);
@@ -485,10 +484,10 @@ begin
    gv_subject := p_subject;
    gv_alarm   := 0;
       
-   -- заголовок
+   -- Р·Р°РіРѕР»РѕРІРѕРє
    Push_Header(recpList, p_subject );
 
-   -- пишем тело письма
+   -- РїРёС€РµРј С‚РµР»Рѕ РїРёСЃСЊРјР°
    if p_rl is not null and p_rl.count>0 then
      for i in p_rl.first .. p_rl.last
      loop
@@ -499,7 +498,7 @@ begin
    end if;
    Push_Body(p_body);
 
-   -- проверяем вложения
+   -- РїСЂРѕРІРµСЂСЏРµРј РІР»РѕР¶РµРЅРёСЏ
    if p_rl is not null and p_rl.count>0 then
      for i in p_rl.first .. p_rl.last
      loop
@@ -519,8 +518,8 @@ begin
            for e in recpList.first .. recpList.last
            loop
              l_msisdn := ri.getMsisdnByRcpt(recpList(e));
-             utils.SendSms(l_msisdn, 'пароль к архиву "'||getNameWOpath(ri.itemName)||'.zip" : '||ri.archPass);
-             debugmsg('Уведомление-пароль для '||recpList(e)||' направлено по смс('||l_msisdn||')');           
+             utils.SendSms(l_msisdn, 'РїР°СЂРѕР»СЊ Рє Р°СЂС…РёРІСѓ "'||getNameWOpath(ri.itemName)||'.zip" : '||ri.archPass);
+             debugmsg('РЈРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЊ РґР»СЏ '||recpList(e)||' РЅР°РїСЂР°РІР»РµРЅРѕ РїРѕ СЃРјСЃ('||l_msisdn||')');           
            end loop;
          end if;
        end if;
@@ -578,15 +577,15 @@ begin
    gv_subject := p_subject;
    gv_alarm   := 0;
    
-   -- заголовок
+   -- Р·Р°РіРѕР»РѕРІРѕРє
    Push_Header(recpList, p_subject );
 
-   -- пишем тело письма
+   -- РїРёС€РµРј С‚РµР»Рѕ РїРёСЃСЊРјР°
    Push_Body(p_body);
 
-   -- проверяем вложения
+   -- РїСЂРѕРІРµСЂСЏРµРј РІР»РѕР¶РµРЅРёСЏ
    if p_attachList is not null and p_attachList.count>0 then
---     debugmsg('есть вложения '||to_char(p_attachList.count));
+--     debugmsg('РµСЃС‚СЊ РІР»РѕР¶РµРЅРёСЏ '||to_char(p_attachList.count));
      for i in p_attachList.first .. p_attachList.last loop
        if p_isArch then 
          l_zipname := substr(p_attachNameList(i),1,instr(p_attachNameList(i),'.'))||'zip';
@@ -596,10 +595,10 @@ begin
            l_EmailmaxAttachSize := greatest(l_EmailmaxAttachSize, length(lb));
            Push_attach(lb, l_zipname, 'ZIP archive('||to_char(i)||' attachement)' );
          else
-           if lower(p_archPass) = 'схема-1' then 
+           if lower(p_archPass) = 'СЃС…РµРјР°-1' then 
              l_archPass := recpList(1); 
            end if;
-           lb := pck_zip.clob_aes_compress(p_attachList(i), p_attachNameList(i), l_archPass);
+           lb := pck_zip.clob_compress(p_attachList(i), p_attachNameList(i));
            l_EmailsumAttachSize := l_EmailsumAttachSize + length(lb);
            l_EmailmaxAttachSize := greatest(l_EmailmaxAttachSize, length(lb));
            Push_attach(lb, l_zipname, 'ZIP archive with pass('||to_char(i)||' attachement)' );
@@ -607,14 +606,14 @@ begin
              l_msisdn := getMsisdnByEmail(recpList(e));
              if sys_context('jm_ctx','dont_send_password')is null then 
                  if l_msisdn is not null then 
-                   utils.SendSms(l_msisdn, 'пароль к архиву "'||l_zipname||'" : '||l_archPass);
-                   debugmsg('Уведомление-пароль для '||recpList(e)||' направлено по смс('||l_msisdn||')');
+                   utils.SendSms(l_msisdn, 'РїР°СЂРѕР»СЊ Рє Р°СЂС…РёРІСѓ "'||l_zipname||'" : '||l_archPass);
+                   debugmsg('РЈРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЊ РґР»СЏ '||recpList(e)||' РЅР°РїСЂР°РІР»РµРЅРѕ РїРѕ СЃРјСЃ('||l_msisdn||')');
                  else
-                   SendTo(recpList(e), p_subject||'-пароль', 'пароль к архиву "'||l_zipname||'" : '||l_archPass);         
-                   debugmsg('Уведомление-пароль для '||recpList(e)||' направлено по e-mail');
+                   SendTo(recpList(e), p_subject||'-РїР°СЂРѕР»СЊ', 'РїР°СЂРѕР»СЊ Рє Р°СЂС…РёРІСѓ "'||l_zipname||'" : '||l_archPass);         
+                   debugmsg('РЈРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЊ РґР»СЏ '||recpList(e)||' РЅР°РїСЂР°РІР»РµРЅРѕ РїРѕ e-mail');
                  end if;
              else
-               debugmsg('Отправка уведомление-пароля запрещена');
+               debugmsg('РћС‚РїСЂР°РІРєР° СѓРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЏ Р·Р°РїСЂРµС‰РµРЅР°');
              end if;
            end loop;
          end if;
@@ -677,15 +676,15 @@ begin
    gv_subject := p_subject;
    gv_alarm   := 0;
    
-   -- заголовок
+   -- Р·Р°РіРѕР»РѕРІРѕРє
    Push_Header(recpList, p_subject );
 
-   -- пишем тело письма
+   -- РїРёС€РµРј С‚РµР»Рѕ РїРёСЃСЊРјР°
    Push_Body(p_body);
 
-   -- проверяем вложения
+   -- РїСЂРѕРІРµСЂСЏРµРј РІР»РѕР¶РµРЅРёСЏ
    if p_attachList is not null and p_attachList.count>0 then
---     debugmsg('есть вложения '||to_char(p_attachList.count));
+--     debugmsg('РµСЃС‚СЊ РІР»РѕР¶РµРЅРёСЏ '||to_char(p_attachList.count));
      for i in p_attachList.first .. p_attachList.last loop
        if p_isArch then 
          l_zipname := substr(p_attachNameList(i),1,instr(p_attachNameList(i),'.'))||'zip';
@@ -695,7 +694,7 @@ begin
            l_EmailmaxAttachSize := greatest(l_EmailmaxAttachSize, length(lb));
            Push_attach(lb, l_zipname, 'ZIP archive('||to_char(i)||' attachement)' );
          /*else
-           if lower(p_archPass) = 'схема-1' then 
+           if lower(p_archPass) = 'СЃС…РµРјР°-1' then 
              l_archPass := recpList(1); 
            end if;
            Push_attach(pck_zip.clob_aes_compress(p_attachList(i), p_attachNameList(i), l_archPass),l_zipname, 'ZIP archive with pass('||to_char(i)||' attachement)' );
@@ -703,14 +702,14 @@ begin
              l_msisdn := getMsisdnByEmail(recpList(e));
              if sys_context('jm_ctx','dont_send_password')is null then 
                  if l_msisdn is not null then 
-                   utils.SendSms(l_msisdn, 'пароль к архиву "'||l_zipname||'" : '||l_archPass);
-                   debugmsg('Уведомление-пароль для '||recpList(e)||' направлено по смс('||l_msisdn||')');
+                   utils.SendSms(l_msisdn, 'РїР°СЂРѕР»СЊ Рє Р°СЂС…РёРІСѓ "'||l_zipname||'" : '||l_archPass);
+                   debugmsg('РЈРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЊ РґР»СЏ '||recpList(e)||' РЅР°РїСЂР°РІР»РµРЅРѕ РїРѕ СЃРјСЃ('||l_msisdn||')');
                  else
-                   SendTo(recpList(e), p_subject||'-пароль', 'пароль к архиву "'||l_zipname||'" : '||l_archPass);         
-                   debugmsg('Уведомление-пароль для '||recpList(e)||' направлено по e-mail');
+                   SendTo(recpList(e), p_subject||'-РїР°СЂРѕР»СЊ', 'РїР°СЂРѕР»СЊ Рє Р°СЂС…РёРІСѓ "'||l_zipname||'" : '||l_archPass);         
+                   debugmsg('РЈРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЊ РґР»СЏ '||recpList(e)||' РЅР°РїСЂР°РІР»РµРЅРѕ РїРѕ e-mail');
                  end if;
              else
-               debugmsg('Отправка уведомление-пароля запрещена');
+               debugmsg('РћС‚РїСЂР°РІРєР° СѓРІРµРґРѕРјР»РµРЅРёРµ-РїР°СЂРѕР»СЏ Р·Р°РїСЂРµС‰РµРЅР°');
              end if;
            end loop;
          end if;*/
@@ -752,3 +751,7 @@ end;
 END;
 --------------------------------------------------------------------------------
 /
+
+
+-- End of DDL Script for Package Body TRANSFORMER.EMAILSENDER
+
